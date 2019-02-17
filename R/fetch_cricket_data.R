@@ -5,7 +5,9 @@ fetch_cricket_data <- function(matchtype = c("test", "odi", "t20"),
                                sex = c("men", "women"),
                                country = NULL,
                                activity = c("batting", "bowling", "fielding"),
-                               view = c("innings", "career"))
+                               view = c("innings", "career"),
+                               from_date = NULL,
+                               to_date = NULL)
 {
   # Check arguments given by user match the type (class?) of the default
   # arguments of the function.
@@ -34,6 +36,32 @@ fetch_cricket_data <- function(matchtype = c("test", "odi", "t20"),
       stop("Country not found")
   }
 
+  #Format from and to dates
+  date_span <- NULL
+  if(!is.null(from_date) & !is.null(to_date)) {
+    from_d <- try(as.Date(from_date, format= "%Y-%m-%d"))
+    if(class(from_d) == "try-error" || is.na(from_d)) stop(paste0("The format of from_date, ", from_date,  ", is incorrect" ))
+    
+    from_day <- format(from_d, "%d")
+    from_mon <- month.abb[as.numeric(format(from_d, "%m"))]
+    from_year <- format(from_d, "%Y")
+    from_q <- paste(from_day, from_mon, from_year, sep = "+")
+    
+    to_d <- try(as.Date(to_date, format= "%Y-%m-%d"))
+    if(class(to_d) == "try-error" || is.na(to_d)) stop(paste0("The format of to_date, ", to_date,  ", is incorrect" ))
+    
+    to_day <- format(to_d, "%d")
+    to_mon <- month.abb[as.numeric(format(to_d, "%m"))]
+    to_year <- format(to_d, "%Y")
+    to_q <- paste(to_day, to_mon, to_year, sep = "+")
+    
+    date_span <- paste0(";spanmax1=", to_q, ";spanmin1=", from_q, ";spanval1=span")
+  } else {
+    #check if only one date is supplied
+    if(is.null(from_date) | is.null(to_date)) stop("Both from_date and to_date are required")
+  } 
+  
+  
   # Set starting page to read from.
   page <- 1L
   alldata <- NULL
@@ -47,6 +75,7 @@ fetch_cricket_data <- function(matchtype = c("test", "odi", "t20"),
       paste0(
         "http://stats.espncricinfo.com/ci/engine/stats/index.html?class=",
         matchclass,
+        date_span,
         ifelse(is.null(country), "", paste0(";team=",team)),
         ";page=",
         format(page, scientific = FALSE),
@@ -55,7 +84,6 @@ fetch_cricket_data <- function(matchtype = c("test", "odi", "t20"),
         view_text,
         ";size=200;wrappertype=print"
       )
-
     # Get raw page data from page using xml2::read_html() with url string.
     raw <- try(xml2::read_html(url), silent=TRUE)
     if("try-error" %in% class(raw))

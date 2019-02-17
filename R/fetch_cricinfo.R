@@ -22,7 +22,9 @@ fetch_cricinfo <- function(matchtype = c("test", "odi", "t20"),
                            sex = c("men", "women"),
                            activity = c("batting", "bowling", "fielding"),
                            type=c("career","innings"),
-                           country=NULL) 
+                           country=NULL,
+                           from_date=NULL,
+                           to_date=NULL) 
 {
   matchtype <- tolower(matchtype)
   sex <- tolower(sex)
@@ -37,7 +39,7 @@ fetch_cricinfo <- function(matchtype = c("test", "odi", "t20"),
   type <- match.arg(type)
 
   # Get the raw data
-  this_data <- fetch_cricket_data(matchtype, sex, country, activity, type)
+  this_data <- fetch_cricket_data(matchtype, sex, country, activity, type, from_date, to_date)
 
   # Clean it up
   if(activity=="batting")
